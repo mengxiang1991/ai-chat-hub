@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(cd:*)",
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com)",
+      "Bash(curl -sL \"https://minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com/ccv2%2F2026-03-22%2FMiniMax-M2.7-highspeed%2F2034515342524420665%2Fff2a1f11b3c853e30a4821bf684b542e4f4f5348e7a8536a4bb00f5d016e5dd8..png?Expires=1774195729&OSSAccessKeyId=LTAI5tGLnRTkBjLuYPjNcKQ8&Signature=XCAHI9%2BGcacFGeQ%2FEQct47e%2B98E%3D\" -o /tmp/screenshot.png)",
+      "Read(//tmp/**)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "Bash(taskkill:*)",
+      "Read(//c/Users/mengxiang/**)",
+      "Read(//c/Users/mengxiang/AppData/Local/**)",
+      "Bash(rm:*)",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "Bash(netstat:*)",
+      "Bash(cmd //c \"taskkill /PID 13032 /F\")",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "Bash(cmd //c \"taskkill /IM ChatHub.exe /F 2>nul\" || echo \"No ChatHub process running\")",
+      "Bash(cmd //c \"tasklist | findstr ChatHub\")",
+      "Bash(sleep:*)",
+      "Bash(cmd //c \"handle \\\\\"D:\\\\\\\\\\\\\\\\Project\\\\\\\\\\\\\\\\chat-hub\\\\\\\\\\\\\\\\release\\\\\\\\\\\\\\\\win-unpacked\\\\\" | head -20\" 2>/dev/null || echo \"handle command not available\")"
+    ]
+  }
+}

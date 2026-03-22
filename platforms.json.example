@@ -1,0 +1,25 @@
+{
+  "platforms": [
+    {
+      "id": "kimi",
+      "name": "Kimi",
+      "icon": "🌙",
+      "url": "https://kimi.moonshot.cn",
+      "loginUrl": "https://kimi.moonshot.cn/login"
+    },
+    {
+      "id": "claude",
+      "name": "Claude",
+      "icon": "🤖",
+      "url": "https://claude.ai",
+      "loginUrl": "https://claude.ai/login"
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini",
+      "icon": "✨",
+      "url": "https://gemini.google.com",
+      "loginUrl": "https://gemini.google.com/login"
+    }
+  ]
+}

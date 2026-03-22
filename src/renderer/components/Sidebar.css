@@ -1,0 +1,120 @@
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  height: 100vh;
+  background: #1a1a2e;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #2d2d44;
+}
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid #2d2d44;
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.platform-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+}
+
+.platform-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.platform-item:hover {
+  background: #2d2d44;
+}
+
+.platform-item.selected {
+  background: #3d3d5c;
+}
+
+.platform-icon {
+  font-size: 18px;
+  margin-right: 12px;
+}
+
+.platform-name {
+  flex: 1;
+  font-size: 14px;
+}
+
+.platform-status {
+  font-size: 12px;
+}
+
+.status-logged-in {
+  color: #4ade80;
+  cursor: pointer;
+}
+
+.status-logged-out {
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.status-logged-out:hover {
+  color: #9ca3af;
+}
+
+.status-loading {
+  color: #6b7280;
+}
+
+.sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid #2d2d44;
+}
+
+.all-button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: opacity 0.2s;
+}
+
+.all-button:hover {
+  opacity: 0.9;
+}
+
+.all-button.selected {
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.settings-button {
+  width: 100%;
+  padding: 10px;
+  background: #2d2d44;
+  border: 1px solid #3d3d5c;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.settings-button:hover {
+  background: #3d3d5c;
+  border-color: #667eea;
+}
