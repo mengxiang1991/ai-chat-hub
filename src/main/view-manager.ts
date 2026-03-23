@@ -9,6 +9,7 @@ export class ViewManager {
   private views: Map<string, BrowserView> = new Map();
   private mainWindow: BrowserWindow | null = null;
   private activeViewId: string | null = null;
+  private visibleViews: Set<string> = new Set(); // Track which views are currently visible
 
   setMainWindow(window: BrowserWindow): void {
     this.mainWindow = window;
@@ -97,18 +98,78 @@ export class ViewManager {
   setActiveView(platformId: string | null): void {
     if (!this.mainWindow) return;
 
-    if (this.activeViewId && this.views.has(this.activeViewId)) {
-      const prevView = this.views.get(this.activeViewId)!;
-      this.mainWindow.removeBrowserView(prevView);
+    // Remove all currently visible views
+    for (const vid of this.visibleViews) {
+      const view = this.views.get(vid);
+      if (view) {
+        this.mainWindow.removeBrowserView(view);
+      }
     }
+    this.visibleViews.clear();
 
     this.activeViewId = platformId;
 
-    if (platformId && this.views.has(platformId)) {
+    if (platformId && platformId !== 'all' && this.views.has(platformId)) {
+      // Single platform mode
       const view = this.views.get(platformId)!;
       this.mainWindow.addBrowserView(view);
+      this.visibleViews.add(platformId);
       this.resizeView(platformId);
     }
+  }
+
+  // Show all views simultaneously (for "all in one" mode)
+  showAllViews(): void {
+    const win = this.mainWindow;
+    if (!win) return;
+
+    // Remove all currently visible views first
+    for (const vid of this.visibleViews) {
+      const view = this.views.get(vid);
+      if (view) {
+        win.removeBrowserView(view);
+      }
+    }
+    this.visibleViews.clear();
+
+    // Add all views with split layout
+    const viewIds = Array.from(this.views.keys());
+    if (viewIds.length === 0) return;
+
+    const [width, height] = win.getContentSize();
+    const sidebarWidth = 240;
+    const contentWidth = width - sidebarWidth;
+    const viewWidth = Math.floor(contentWidth / viewIds.length);
+
+    viewIds.forEach((vid, index) => {
+      const view = this.views.get(vid)!;
+      win.addBrowserView(view);
+      this.visibleViews.add(vid);
+      view.setBounds({
+        x: sidebarWidth + index * viewWidth,
+        y: 0,
+        width: viewWidth,
+        height: height,
+      });
+      view.setAutoResize({
+        width: false,
+        height: false,
+      });
+    });
+  }
+
+  // Hide all views (when switching away from "all in one" mode)
+  hideAllViews(): void {
+    const win = this.mainWindow;
+    if (!win) return;
+
+    for (const vid of this.visibleViews) {
+      const view = this.views.get(vid);
+      if (view) {
+        win.removeBrowserView(view);
+      }
+    }
+    this.visibleViews.clear();
   }
 
   resizeView(platformId: string): void {
@@ -145,6 +206,7 @@ export class ViewManager {
       if (this.mainWindow) {
         this.mainWindow.removeBrowserView(view);
       }
+      this.visibleViews.delete(platformId);
       await view.webContents.close();
       this.views.delete(platformId);
       console.log(`[ViewManager] Closed view for ${platformId}`);

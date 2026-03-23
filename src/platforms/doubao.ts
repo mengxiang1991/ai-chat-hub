@@ -10,7 +10,7 @@ export default class DoubaoAdapter implements PlatformAdapter {
 
   async isLoggedIn(view: BrowserView): Promise<boolean> {
     try {
-      await view.webContents.loadURL('https://www.doubao.com');
+      await view.webContents.loadURL('https://www.doubao.com/chat');
       await new Promise(resolve => setTimeout(resolve, 2000));
       const hasInput = await view.webContents.executeJavaScript(`
         document.querySelector('textarea[placeholder*="输入"]') !== null ||

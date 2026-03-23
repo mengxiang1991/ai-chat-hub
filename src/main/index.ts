@@ -126,3 +126,13 @@ ipcMain.handle('view:resize', async (_event, platformId: string) => {
   viewManager.resizeView(platformId);
   return { success: true };
 });
+
+ipcMain.handle('view:show-all', async () => {
+  viewManager.showAllViews();
+  return { success: true };
+});
+
+ipcMain.handle('view:hide-all', async () => {
+  viewManager.hideAllViews();
+  return { success: true };
+});

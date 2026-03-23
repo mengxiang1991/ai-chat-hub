@@ -21,6 +21,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   viewGetActive: () => ipcRenderer.invoke('view:get-active'),
   viewHas: (platformId: string) => ipcRenderer.invoke('view:has', platformId),
   viewResize: (platformId: string) => ipcRenderer.invoke('view:resize', platformId),
+  viewShowAll: () => ipcRenderer.invoke('view:show-all'),
+  viewHideAll: () => ipcRenderer.invoke('view:hide-all'),
 
   // Store
   getStoreValue: (key: string) => ipcRenderer.invoke('store:get', key),

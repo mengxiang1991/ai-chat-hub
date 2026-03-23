@@ -73,7 +73,7 @@ export default class DeepseekAdapter implements PlatformAdapter {
       const input = document.querySelector('textarea[placeholder*="输入"]') ||
                     document.querySelector('[contenteditable="true"]');
       if (input) {
-        input.textContent = ${JSON.stringify(question)};
+        input.value = ${JSON.stringify(question)};
         input.dispatchEvent(new Event('input', { bubbles: true }));
       }
     `);

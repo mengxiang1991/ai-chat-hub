@@ -10,7 +10,7 @@ export default class YuanbaoAdapter implements PlatformAdapter {
 
   async isLoggedIn(view: BrowserView): Promise<boolean> {
     try {
-      await view.webContents.loadURL('https://yuanbao.tencent.com');
+      await view.webContents.loadURL('https://yuanbao.tencent.com/chat');
       await new Promise(resolve => setTimeout(resolve, 2000));
       const hasInput = await view.webContents.executeJavaScript(`
         document.querySelector('.ql-editor') !== null
@@ -69,7 +69,7 @@ export default class YuanbaoAdapter implements PlatformAdapter {
     await view.webContents.executeJavaScript(`
       const input = document.querySelector('.ql-editor');
       if (input) {
-        input.textContent = ${JSON.stringify(question)};
+        input.value = ${JSON.stringify(question)};
         input.dispatchEvent(new Event('input', { bubbles: true }));
       }
     `);

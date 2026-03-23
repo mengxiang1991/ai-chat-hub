@@ -22,6 +22,8 @@ declare global {
       viewSetActive: (platformId: string | null) => Promise<{ success: boolean }>;
       viewGetActive: () => Promise<string | null>;
       viewHas: (platformId: string) => Promise<boolean>;
+      viewShowAll: () => Promise<{ success: boolean }>;
+      viewHideAll: () => Promise<{ success: boolean }>;
     };
   }
 }
@@ -37,9 +39,23 @@ const App: React.FC = () => {
 
   const handleSelectPlatform = useCallback(async (id: string | 'all') => {
     if (id === 'all') {
+      // Hide single platform view
+      await window.electronAPI.viewHideAll();
+      // Create views for all logged-in platforms
+      const loggedInPlatforms = platforms.filter(p => p.isLoggedIn);
+      for (const platform of loggedInPlatforms) {
+        const hasView = await window.electronAPI.viewHas(platform.id);
+        if (!hasView) {
+          await window.electronAPI.platformOpen(platform.id);
+        }
+      }
+      // Show all views in split layout
+      await window.electronAPI.viewShowAll();
       setIsAllMode(true);
       setSelectedPlatform(null);
     } else {
+      // Hide all views and switch to single platform mode
+      await window.electronAPI.viewHideAll();
       setIsAllMode(false);
       setSelectedPlatform(id);
 
