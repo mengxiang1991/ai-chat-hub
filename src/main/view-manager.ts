@@ -1,9 +1,9 @@
-import { BrowserView, session, BrowserWindow } from 'electron';
+import { BrowserView, session, BrowserWindow, app } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import store from './store';
 
-const SESSION_DIR = path.join(process.cwd(), '.session-data');
+const SESSION_DIR = path.join(app.getPath('userData'), '.session-data');
 
 export class ViewManager {
   private views: Map<string, BrowserView> = new Map();

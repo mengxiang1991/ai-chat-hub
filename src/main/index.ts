@@ -46,8 +46,8 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  createWindow();
-  setupPlatformHandlers();
+  setupPlatformHandlers(); // Register IPC handlers first
+  createWindow();          // Then create window
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

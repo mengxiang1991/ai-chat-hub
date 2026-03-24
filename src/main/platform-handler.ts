@@ -171,46 +171,56 @@ export function setupPlatformHandlers() {
       async login(view: any): Promise<void> {
         await view.webContents.loadURL(this.loginUrl);
         await new Promise(resolve => setTimeout(resolve, 3000));
+        let checkInterval: NodeJS.Timeout | null = null;
+        let timeout: NodeJS.Timeout | null = null;
+        const cleanup = () => {
+          if (checkInterval) clearInterval(checkInterval);
+          if (timeout) clearTimeout(timeout);
+        };
         await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('Login timeout')), 120000);
-          const checkInterval = setInterval(async () => {
+          timeout = setTimeout(() => reject(new Error('Login timeout')), 120000);
+          checkInterval = setInterval(async () => {
             try {
               const hasInput = await view.webContents.executeJavaScript(`
                 document.querySelector('textarea[placeholder*="输入"], textarea[placeholder*="搜索"], input[type="text"], [contenteditable="true"]') !== null
               `) as boolean;
               if (hasInput) {
-                clearInterval(checkInterval);
-                clearTimeout(timeout);
+                cleanup();
                 resolve();
               }
             } catch {
               // Ignore errors
             }
           }, 1000);
-        });
+        }).finally(cleanup);
       }
 
       async ask(view: any, question: string): Promise<string> {
         await view.webContents.loadURL(this.url);
         await new Promise(resolve => setTimeout(resolve, 3000));
 
+        let inputCheckInterval: NodeJS.Timeout | null = null;
+        let inputTimeout: NodeJS.Timeout | null = null;
+        const inputCleanup = () => {
+          if (inputCheckInterval) clearInterval(inputCheckInterval);
+          if (inputTimeout) clearTimeout(inputTimeout);
+        };
         await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('Input not found')), 15000);
-          const checkInterval = setInterval(async () => {
+          inputTimeout = setTimeout(() => reject(new Error('Input not found')), 15000);
+          inputCheckInterval = setInterval(async () => {
             try {
               const hasInput = await view.webContents.executeJavaScript(`
                 document.querySelector('textarea[placeholder*="输入"], textarea[placeholder*="搜索"], input[type="text"], [contenteditable="true"]') !== null
               `) as boolean;
               if (hasInput) {
-                clearInterval(checkInterval);
-                clearTimeout(timeout);
+                inputCleanup();
                 resolve();
               }
             } catch {
               // Ignore errors
             }
           }, 500);
-        });
+        }).finally(inputCleanup);
 
         await view.webContents.executeJavaScript(`
           const input = document.querySelector('textarea[placeholder*="输入"], textarea[placeholder*="搜索"], input[type="text"], [contenteditable="true"]');
@@ -227,23 +237,28 @@ export function setupPlatformHandlers() {
           }
         `);
 
+        let responseCheckInterval: NodeJS.Timeout | null = null;
+        let responseTimeout: NodeJS.Timeout | null = null;
+        const responseCleanup = () => {
+          if (responseCheckInterval) clearInterval(responseCheckInterval);
+          if (responseTimeout) clearTimeout(responseTimeout);
+        };
         await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('Response timeout')), 60000);
-          const checkInterval = setInterval(async () => {
+          responseTimeout = setTimeout(() => reject(new Error('Response timeout')), 60000);
+          responseCheckInterval = setInterval(async () => {
             try {
               const hasResponse = await view.webContents.executeJavaScript(`
                 document.querySelector('[class*="message"], [class*="response"], [class*="answer"]') !== null
               `) as boolean;
               if (hasResponse) {
-                clearInterval(checkInterval);
-                clearTimeout(timeout);
+                responseCleanup();
                 resolve();
               }
             } catch {
               // Ignore errors
             }
           }, 1000);
-        });
+        }).finally(responseCleanup);
 
         const response = await view.webContents.executeJavaScript(`
           const messages = document.querySelectorAll('[class*="message-assistant"], [class*="response"], [class*="answer"]');

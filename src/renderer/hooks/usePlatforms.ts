@@ -45,6 +45,7 @@ export function usePlatforms() {
   // Load custom platforms from store
   useEffect(() => {
     const loadCustomPlatforms = async () => {
+      if (!window.electronAPI) return;
       try {
         const customPlatforms = await window.electronAPI.getStoreValue('customPlatforms') as Platform[] | undefined;
         if (customPlatforms && customPlatforms.length > 0) {
