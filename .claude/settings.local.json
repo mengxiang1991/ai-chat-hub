@@ -23,7 +23,12 @@
       "Bash(cmd //c \"taskkill /IM ChatHub.exe /F 2>nul\" || echo \"No ChatHub process running\")",
       "Bash(cmd //c \"tasklist | findstr ChatHub\")",
       "Bash(sleep:*)",
-      "Bash(cmd //c \"handle \\\\\"D:\\\\\\\\\\\\\\\\Project\\\\\\\\\\\\\\\\chat-hub\\\\\\\\\\\\\\\\release\\\\\\\\\\\\\\\\win-unpacked\\\\\" | head -20\" 2>/dev/null || echo \"handle command not available\")"
+      "Bash(cmd //c \"handle \\\\\"D:\\\\\\\\\\\\\\\\Project\\\\\\\\\\\\\\\\chat-hub\\\\\\\\\\\\\\\\release\\\\\\\\\\\\\\\\win-unpacked\\\\\" | head -20\" 2>/dev/null || echo \"handle command not available\")",
+      "Bash(curl:*)",
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

@@ -12,11 +12,16 @@ export default class DoubaoAdapter implements PlatformAdapter {
     try {
       await view.webContents.loadURL('https://www.doubao.com/chat');
       await new Promise(resolve => setTimeout(resolve, 2000));
-      const hasInput = await view.webContents.executeJavaScript(`
-        document.querySelector('textarea[placeholder*="输入"]') !== null ||
-        document.querySelector('div[contenteditable="true"]') !== null
+      const isLoggedIn = await view.webContents.executeJavaScript(`
+        // Check for user avatar/menu which indicates logged in state
+        document.querySelector('[class*="avatar"]') !== null ||
+        document.querySelector('[class*="user-info"]') !== null ||
+        document.querySelector('[class*="user-menu"]') !== null ||
+        // Fallback: check for input enabled state
+        (document.querySelector('textarea[placeholder*="输入"]') !== null &&
+         document.querySelector('textarea[placeholder*="输入"]').disabled === false)
       `) as boolean;
-      return hasInput;
+      return isLoggedIn;
     } catch {
       return false;
     }
@@ -26,65 +31,72 @@ export default class DoubaoAdapter implements PlatformAdapter {
     await view.webContents.loadURL(this.loginUrl);
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Wait for the input to appear
-    await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Login timeout')), 120000);
+    let checkInterval: NodeJS.Timeout | null = null;
+    let timeout: NodeJS.Timeout | null = null;
 
-      const checkInterval = setInterval(async () => {
+    const cleanup = () => {
+      if (checkInterval) clearInterval(checkInterval);
+      if (timeout) clearTimeout(timeout);
+    };
+
+    await new Promise<void>((resolve, reject) => {
+      timeout = setTimeout(() => reject(new Error('Login timeout')), 120000);
+      checkInterval = setInterval(async () => {
         try {
           const hasInput = await view.webContents.executeJavaScript(`
             document.querySelector('textarea[placeholder*="输入"]') !== null ||
             document.querySelector('div[contenteditable="true"]') !== null
           `) as boolean;
-
           if (hasInput) {
-            clearInterval(checkInterval);
-            clearTimeout(timeout);
+            cleanup();
             resolve();
           }
         } catch {
           // Ignore errors during polling
         }
       }, 1000);
-    });
+    }).finally(cleanup);
   }
 
   async ask(view: BrowserView, question: string): Promise<string> {
-    // First load the chat page
     await view.webContents.loadURL(this.url);
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Wait for input to be ready
+    let checkInterval: NodeJS.Timeout | null = null;
+    let timeout: NodeJS.Timeout | null = null;
+
+    const cleanup = () => {
+      if (checkInterval) clearInterval(checkInterval);
+      if (timeout) clearTimeout(timeout);
+    };
+
     await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Input not found')), 15000);
-      const checkInterval = setInterval(async () => {
+      timeout = setTimeout(() => reject(new Error('Input not found')), 15000);
+      checkInterval = setInterval(async () => {
         try {
           const hasInput = await view.webContents.executeJavaScript(`
             document.querySelector('textarea[placeholder*="输入"]') !== null ||
             document.querySelector('div[contenteditable="true"]') !== null
           `) as boolean;
           if (hasInput) {
-            clearInterval(checkInterval);
-            clearTimeout(timeout);
+            cleanup();
             resolve();
           }
         } catch {
           // Ignore errors during polling
         }
       }, 500);
-    });
+    }).finally(cleanup);
 
-    // Fill the input with the question
     await view.webContents.executeJavaScript(`
       const input = document.querySelector('textarea[placeholder*="输入"]') ||
                     document.querySelector('div[contenteditable="true"]');
       if (input) {
-        input.textContent = ${JSON.stringify(question)};
+        input.value = ${JSON.stringify(question)};
         input.dispatchEvent(new Event('input', { bubbles: true }));
       }
     `);
 
-    // Click the send button
     await view.webContents.executeJavaScript(`
       const buttons = Array.from(document.querySelectorAll('button'));
       const sendButton = buttons.find(btn =>
@@ -94,27 +106,32 @@ export default class DoubaoAdapter implements PlatformAdapter {
       if (sendButton) sendButton.click();
     `);
 
-    // Wait for response
+    let responseInterval: NodeJS.Timeout | null = null;
+    let responseTimeout: NodeJS.Timeout | null = null;
+
+    const cleanupResponse = () => {
+      if (responseInterval) clearInterval(responseInterval);
+      if (responseTimeout) clearTimeout(responseTimeout);
+    };
+
     await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Response timeout')), 60000);
-      const checkInterval = setInterval(async () => {
+      responseTimeout = setTimeout(() => reject(new Error('Response timeout')), 60000);
+      responseInterval = setInterval(async () => {
         try {
           const hasResponse = await view.webContents.executeJavaScript(`
             document.querySelector('[class*="message-assistant"]') !== null ||
             document.querySelector('[class*="response"]') !== null
           `) as boolean;
           if (hasResponse) {
-            clearInterval(checkInterval);
-            clearTimeout(timeout);
+            cleanupResponse();
             resolve();
           }
         } catch {
           // Ignore errors during polling
         }
       }, 1000);
-    });
+    }).finally(cleanupResponse);
 
-    // Get the response text
     const response = await view.webContents.executeJavaScript(`
       const messages = document.querySelectorAll('[class*="message-assistant"], [class*="response"]');
       const lastMessage = messages[messages.length - 1];

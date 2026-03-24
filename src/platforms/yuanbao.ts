@@ -12,10 +12,16 @@ export default class YuanbaoAdapter implements PlatformAdapter {
     try {
       await view.webContents.loadURL('https://yuanbao.tencent.com/chat');
       await new Promise(resolve => setTimeout(resolve, 2000));
-      const hasInput = await view.webContents.executeJavaScript(`
-        document.querySelector('.ql-editor') !== null
+      const isLoggedIn = await view.webContents.executeJavaScript(`
+        // Check for user avatar/menu which indicates logged in state
+        document.querySelector('[class*="user-avatar"]') !== null ||
+        document.querySelector('[class*="user-info"]') !== null ||
+        document.querySelector('[class*="avatar"]') !== null ||
+        // Fallback: check for input enabled state
+        (document.querySelector('.ql-editor') !== null &&
+         document.querySelector('.ql-editor').getAttribute('contenteditable') !== 'false')
       `) as boolean;
-      return hasInput;
+      return isLoggedIn;
     } catch {
       return false;
     }
@@ -25,46 +31,60 @@ export default class YuanbaoAdapter implements PlatformAdapter {
     await view.webContents.loadURL(this.loginUrl);
     await new Promise(resolve => setTimeout(resolve, 3000));
 
+    let checkInterval: NodeJS.Timeout | null = null;
+    let timeout: NodeJS.Timeout | null = null;
+
+    const cleanup = () => {
+      if (checkInterval) clearInterval(checkInterval);
+      if (timeout) clearTimeout(timeout);
+    };
+
     await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Login timeout')), 120000);
-      const checkInterval = setInterval(async () => {
+      timeout = setTimeout(() => reject(new Error('Login timeout')), 120000);
+      checkInterval = setInterval(async () => {
         try {
           const hasInput = await view.webContents.executeJavaScript(`
             document.querySelector('.ql-editor') !== null
           `) as boolean;
           if (hasInput) {
-            clearInterval(checkInterval);
-            clearTimeout(timeout);
+            cleanup();
             resolve();
           }
         } catch {
           // Ignore errors during polling
         }
       }, 1000);
-    });
+    }).finally(cleanup);
   }
 
   async ask(view: BrowserView, question: string): Promise<string> {
     await view.webContents.loadURL(this.url);
     await new Promise(resolve => setTimeout(resolve, 3000));
 
+    let checkInterval: NodeJS.Timeout | null = null;
+    let timeout: NodeJS.Timeout | null = null;
+
+    const cleanup = () => {
+      if (checkInterval) clearInterval(checkInterval);
+      if (timeout) clearTimeout(timeout);
+    };
+
     await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Input not found')), 15000);
-      const checkInterval = setInterval(async () => {
+      timeout = setTimeout(() => reject(new Error('Input not found')), 15000);
+      checkInterval = setInterval(async () => {
         try {
           const hasInput = await view.webContents.executeJavaScript(`
             document.querySelector('.ql-editor') !== null
           `) as boolean;
           if (hasInput) {
-            clearInterval(checkInterval);
-            clearTimeout(timeout);
+            cleanup();
             resolve();
           }
         } catch {
           // Ignore errors during polling
         }
       }, 500);
-    });
+    }).finally(cleanup);
 
     await view.webContents.executeJavaScript(`
       const input = document.querySelector('.ql-editor');
@@ -83,23 +103,30 @@ export default class YuanbaoAdapter implements PlatformAdapter {
       }
     `);
 
+    let responseInterval: NodeJS.Timeout | null = null;
+    let responseTimeout: NodeJS.Timeout | null = null;
+
+    const cleanupResponse = () => {
+      if (responseInterval) clearInterval(responseInterval);
+      if (responseTimeout) clearTimeout(responseTimeout);
+    };
+
     await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Response timeout')), 60000);
-      const checkInterval = setInterval(async () => {
+      responseTimeout = setTimeout(() => reject(new Error('Response timeout')), 60000);
+      responseInterval = setInterval(async () => {
         try {
           const hasResponse = await view.webContents.executeJavaScript(`
-            document.querySelector('[class*="message"]') !== null
+            document.querySelector('[class*="message-assistant"]') !== null
           `) as boolean;
           if (hasResponse) {
-            clearInterval(checkInterval);
-            clearTimeout(timeout);
+            cleanupResponse();
             resolve();
           }
         } catch {
           // Ignore errors during polling
         }
       }, 1000);
-    });
+    }).finally(cleanupResponse);
 
     const response = await view.webContents.executeJavaScript(`
       const messages = document.querySelectorAll('[class*="message-assistant"]');
