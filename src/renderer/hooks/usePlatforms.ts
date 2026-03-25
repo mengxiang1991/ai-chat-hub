@@ -61,24 +61,33 @@ export function usePlatforms() {
     loadCustomPlatforms();
   }, []);
 
-  // Check login status on mount and periodically
+  // Check login status on mount - batch update to avoid multiple re-renders
   useEffect(() => {
     const checkLoginStatus = async () => {
-      for (const platform of platforms) {
-        try {
-          const isLoggedIn = await window.electronAPI.platformIsLoggedIn(platform.id);
-          setPlatforms(prev =>
-            prev.map(p => p.id === platform.id ? { ...p, isLoggedIn, isLoading: false } : p)
-          );
-        } catch {
-          setPlatforms(prev =>
-            prev.map(p => p.id === platform.id ? { ...p, isLoading: false } : p)
-          );
-        }
-      }
+      // Batch update: collect all results first, then update once
+      const updates = await Promise.all(
+        platforms.map(async (platform) => {
+          try {
+            const isLoggedIn = await window.electronAPI.platformIsLoggedIn(platform.id);
+            return { id: platform.id, isLoggedIn, isLoading: false, error: null };
+          } catch {
+            return { id: platform.id, isLoggedIn: false, isLoading: false, error: true };
+          }
+        })
+      );
+
+      // Single batch update - only one re-render
+      setPlatforms(prev =>
+        prev.map(p => {
+          const update = updates.find(u => u.id === p.id);
+          if (update) {
+            return { ...p, isLoggedIn: update.isLoggedIn, isLoading: false };
+          }
+          return p;
+        })
+      );
     };
 
-    // Initial check
     const timer = setTimeout(checkLoginStatus, 1000);
     return () => clearTimeout(timer);
   }, []);
